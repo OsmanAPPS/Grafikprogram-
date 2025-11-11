@@ -41,7 +41,45 @@
             <div id="results"></div>
         </div>
     </div>
+
+    <!-- 3D Plotting Section -->
+    <div class="container-3d">
+        <h1>3D Denklem Çizim ve Analiz</h1>
+        <div class="input-section-3d">
+            <h2>Denklem ve Ayarlar</h2>
+            <input type="text" id="eq-input" placeholder="z = f(x, y) örn: sin(x) + cos(y)">
+            <div class="range-inputs">
+                <input type="number" id="x-min" placeholder="X Min" value="-10">
+                <input type="number" id="x-max" placeholder="X Maks" value="10">
+                <input type="number" id="y-min" placeholder="Y Min" value="-10">
+                <input type="number" id="y-max" placeholder="Y Maks" value="10">
+            </div>
+            <button id="draw-3d-chart">3D Grafiği Çiz</button>
+        </div>
+        <div class="chart-section-3d">
+            <div id="my3dChart"></div>
+        </div>
+        <div class="control-panel-3d">
+            <h2>3D Analiz Paneli</h2>
+            <div class="analysis-grid-3d">
+                <button id="calc-max-z">Maksimum Değer</button>
+                <button id="calc-min-z">Minimum Değer</button>
+                <button id="calc-peak-coords">Tepe Koordinatları</button>
+                <button id="calc-trough-coords">Çukur Koordinatları</button>
+                <button id="calc-mean-z">Ortalama Yükseklik</button>
+                <button id="calc-volume">Hacim (Yaklaşık)</button>
+                <button id="calc-surface-area">Yüzey Alanı (Yaklaşık)</button>
+                <button id="calc-height-diff">Toplam Yükseklik Farkı</button>
+                <button id="calc-avg-slope">Ortalama Eğim</button>
+                <button id="check-symmetry">Simetri Kontrolü</button>
+            </div>
+            <div id="results-3d"></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

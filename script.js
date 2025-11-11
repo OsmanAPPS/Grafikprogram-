@@ -167,4 +167,204 @@ document.addEventListener('DOMContentLoaded', () => {
         const r = getCorrelation();
         runAnalysis(() => r * r, 'Belirlilik Katsayısı (R-kare)');
     });
+
+    // --- 3D Plotting Logic ---
+    const draw3dChartBtn = document.getElementById('draw-3d-chart');
+    const eqInput = document.getElementById('eq-input');
+    const xMinInput = document.getElementById('x-min');
+    const xMaxInput = document.getElementById('x-max');
+    const yMinInput = document.getElementById('y-min');
+    const yMaxInput = document.getElementById('y-max');
+    const results3dDiv = document.getElementById('results-3d');
+
+    let zData = []; // Store z data for analysis
+
+    draw3dChartBtn.addEventListener('click', () => {
+        try {
+            const expr = eqInput.value;
+            if (!expr) {
+                results3dDiv.innerHTML = 'Lütfen bir denklem girin.';
+                return;
+            }
+
+            const xMin = parseFloat(xMinInput.value);
+            const xMax = parseFloat(xMaxInput.value);
+            const yMin = parseFloat(yMinInput.value);
+            const yMax = parseFloat(yMaxInput.value);
+
+            const node = math.parse(expr);
+            const code = node.compile();
+
+            const xValues = [];
+            const yValues = [];
+            zData = [];
+
+            const steps = 50; // Resolution of the plot
+            const xStep = (xMax - xMin) / steps;
+            const yStep = (yMax - yMin) / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                xValues.push(xMin + i * xStep);
+                yValues.push(yMin + i * yStep);
+            }
+
+            for (let j = 0; j <= steps; j++) {
+                const zRow = [];
+                for (let i = 0; i <= steps; i++) {
+                    const scope = {
+                        x: xValues[i],
+                        y: yValues[j]
+                    };
+                    zRow.push(code.evaluate(scope));
+                }
+                zData.push(zRow);
+            }
+
+            const data = [{
+                z: zData,
+                x: xValues,
+                y: yValues,
+                type: 'surface'
+            }];
+
+            const layout = {
+                title: `z = ${expr}`,
+                autosize: true,
+                margin: { l: 65, r: 50, b: 65, t: 90 }
+            };
+
+            Plotly.newPlot('my3dChart', data, layout);
+            results3dDiv.innerHTML = 'Grafik başarıyla çizildi.';
+
+        } catch (error) {
+            results3dDiv.innerHTML = `Hata: ${error.message}`;
+        }
+    });
+
+    // --- 3D Analysis Logic ---
+    const analysis3dButtons = document.querySelectorAll('.analysis-grid-3d button');
+
+    function run3dAnalysis(calculation, resultText) {
+        if (zData.length === 0) {
+            results3dDiv.innerHTML = 'Lütfen önce bir 3D grafik çizin.';
+            return;
+        }
+        try {
+            const result = calculation();
+            results3dDiv.innerHTML = `${resultText}: ${result}`;
+        } catch (error) {
+            results3dDiv.innerHTML = `Hesaplama hatası: ${error.message}`;
+        }
+    }
+
+    document.getElementById('calc-max-z').addEventListener('click', () => {
+        run3dAnalysis(() => Math.max(...zData.flat()).toFixed(3), 'Maksimum Değer (Tepe)');
+    });
+
+    document.getElementById('calc-min-z').addEventListener('click', () => {
+        run3dAnalysis(() => Math.min(...zData.flat()).toFixed(3), 'Minimum Değer (Çukur)');
+    });
+
+    document.getElementById('calc-mean-z').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            const flatZ = zData.flat();
+            return (flatZ.reduce((a, b) => a + b, 0) / flatZ.length).toFixed(3);
+        }, 'Ortalama Yükseklik');
+    });
+
+    document.getElementById('calc-height-diff').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            const flatZ = zData.flat();
+            return (Math.max(...flatZ) - Math.min(...flatZ)).toFixed(3);
+        }, 'Toplam Yükseklik Farkı');
+    });
+
+    document.getElementById('calc-peak-coords').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            const maxZ = Math.max(...zData.flat());
+            for (let j = 0; j < zData.length; j++) {
+                for (let i = 0; i < zData[j].length; i++) {
+                    if (zData[j][i] === maxZ) {
+                        const x = parseFloat(xMinInput.value) + i * ((parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50);
+                        const y = parseFloat(yMinInput.value) + j * ((parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50);
+                        return `(x: ${x.toFixed(2)}, y: ${y.toFixed(2)}, z: ${maxZ.toFixed(2)})`;
+                    }
+                }
+            }
+        }, 'Tepe Noktası Koordinatları');
+    });
+
+    document.getElementById('calc-trough-coords').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            const minZ = Math.min(...zData.flat());
+            for (let j = 0; j < zData.length; j++) {
+                for (let i = 0; i < zData[j].length; i++) {
+                    if (zData[j][i] === minZ) {
+                        const x = parseFloat(xMinInput.value) + i * ((parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50);
+                        const y = parseFloat(yMinInput.value) + j * ((parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50);
+                        return `(x: ${x.toFixed(2)}, y: ${y.toFixed(2)}, z: ${minZ.toFixed(2)})`;
+                    }
+                }
+            }
+        }, 'Çukur Noktası Koordinatları');
+    });
+
+    document.getElementById('calc-volume').addEventListener('click', () => {
+        run3dAnalysis(() => {
+             const xStep = (parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50;
+             const yStep = (parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50;
+             const cellArea = xStep * yStep;
+             const totalVolume = zData.flat().reduce((sum, z) => sum + z * cellArea, 0);
+             return totalVolume.toFixed(3);
+        }, 'Yüzeyin Altındaki Hacim');
+    });
+
+    document.getElementById('calc-surface-area').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            let totalArea = 0;
+            const xStep = (parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50;
+            const yStep = (parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50;
+             for (let j = 0; j < zData.length - 1; j++) {
+                for (let i = 0; i < zData[j].length - 1; i++) {
+                     const dz_dx = (zData[j][i+1] - zData[j][i]) / xStep;
+                     const dz_dy = (zData[j+1][i] - zData[j][i]) / yStep;
+                     totalArea += Math.sqrt(1 + dz_dx**2 + dz_dy**2) * xStep * yStep;
+                }
+            }
+             return totalArea.toFixed(3);
+        }, '3D Yüzey Alanı');
+    });
+
+    document.getElementById('calc-avg-slope').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            let totalSlope = 0;
+            let count = 0;
+            const xStep = (parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50;
+            const yStep = (parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50;
+            for (let j = 0; j < zData.length - 1; j++) {
+                for (let i = 0; i < zData[j].length - 1; i++) {
+                    const dz_dx = (zData[j][i+1] - zData[j][i]) / xStep;
+                    const dz_dy = (zData[j+1][i] - zData[j][i]) / yStep;
+                    totalSlope += Math.sqrt(dz_dx**2 + dz_dy**2);
+                    count++;
+                }
+            }
+            return (totalSlope / count).toFixed(3);
+        }, 'Ortalama Eğim');
+    });
+
+    document.getElementById('check-symmetry').addEventListener('click', () => {
+        run3dAnalysis(() => {
+            // Check for symmetry across y-z plane (f(x,y) vs f(-x,y))
+            // This is an approximation
+            let diff = 0;
+            const steps = 50;
+            for (let j = 0; j < zData.length; j++) {
+                for (let i = 0; i < Math.floor(zData[j].length / 2); i++) {
+                     diff += Math.abs(zData[j][i] - zData[j][steps-i]);
+                }
+            }
+            return (diff / (steps*steps)) < 0.1 ? 'Simetrik Görünüyor' : 'Simetrik Değil';
+        }, 'Simetri (y-z düzlemine göre)');
+    });
 });
