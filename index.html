@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafik Çizim ve Analiz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Grafik Çizim ve Analiz Aracı</h1>
+    <div class="container">
+        <div class="input-section">
+            <h2>Veri Girişi</h2>
+            <div id="data-points">
+                <div class="point">
+                    <input type="number" class="x-input" placeholder="X Değeri">
+                    <input type="number" class="y-input" placeholder="Y Değeri">
+                </div>
+            </div>
+            <button id="add-point">Nokta Ekle</button>
+            <button id="draw-chart">Grafiği Çiz</button>
+        </div>
+        <div class="chart-section">
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="control-panel">
+            <h2>Kontrol Paneli</h2>
+            <button id="find-equation">Eğrinin Denklemini Bul</button>
+            <button id="calculate-area">Altında Kalan Alanı Bul</button>
+            <div id="results"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
