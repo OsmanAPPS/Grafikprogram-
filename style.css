@@ -69,6 +69,33 @@ button:hover {
     background-color: #0056b3;
 }
 
+.remove-point {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto; /* Override the 100% width */
+    margin-left: 10px;
+}
+
+.remove-point:hover {
+    background-color: #cc0000;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.analysis-grid button {
+    width: 100%;
+    margin-top: 0; /* Remove top margin for grid items */
+}
+
 #results {
     margin-top: 20px;
     padding: 10px;
