@@ -13,7 +13,10 @@
             <h2>Veri Girişi</h2>
             <div id="dataset-container">
                 <div class="dataset">
-                    <h3>Veri Seti 1</h3>
+                    <div class="dataset-header">
+                        <h3>Veri Seti 1</h3>
+                        <button class="remove-dataset">X</button>
+                    </div>
                     <div class="data-points">
                         <div class="point">
                             <input type="number" class="x-input" placeholder="X Değeri">
@@ -22,6 +25,10 @@
                         </div>
                     </div>
                     <button class="add-point">Nokta Ekle</button>
+                    <div class="file-upload-container">
+                        <label for="file-upload-1">TXT'den Yükle:</label>
+                        <input type="file" class="file-upload" id="file-upload-1" accept=".txt">
+                    </div>
                 </div>
             </div>
             <button id="add-dataset">Veri Seti Ekle</button>
@@ -49,6 +56,15 @@
                 <button id="calc-r-squared">R-Kare</button>
             </div>
             <div id="results"></div>
+
+            <div class="area-between-container">
+                <h4>İki Eğri Arasındaki Alan</h4>
+                <label for="dataset-selector-1">Eğri 1:</label>
+                <select id="dataset-selector-1"></select>
+                <label for="dataset-selector-2">Eğri 2:</label>
+                <select id="dataset-selector-2"></select>
+                <button id="calculate-area-between">Alanı Hesapla</button>
+            </div>
         </div>
     </div>
 

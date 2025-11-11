@@ -60,6 +60,33 @@ h1 {
 
 .dataset h3 {
     margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.dataset-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.dataset-header h3 {
+    margin: 0;
+}
+
+.remove-dataset {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto;
+    margin-top: 0;
+}
+
+.remove-dataset:hover {
+    background-color: #cc0000;
 }
 
 .point {
@@ -152,4 +179,29 @@ button:hover {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+.file-upload-container {
+    margin-top: 15px;
+}
+
+.file-upload-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.area-between-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.area-between-container h4 {
+    margin-top: 0;
+}
+
+.area-between-container label {
+    display: block;
+    margin: 10px 0 5px;
 }

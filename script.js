@@ -23,7 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const datasetDiv = document.createElement('div');
         datasetDiv.classList.add('dataset');
         datasetDiv.innerHTML = `
-            <h3>Veri Seti ${datasetCount}</h3>
+            <div class="dataset-header">
+                <h3>Veri Seti ${datasetCount}</h3>
+                <button class="remove-dataset">X</button>
+            </div>
             <div class="data-points">
                 <div class="point">
                     <input type="number" class="x-input" placeholder="X Değeri">
@@ -32,11 +35,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <button class="add-point">Nokta Ekle</button>
+            <div class="file-upload-container">
+                <label for="file-upload-${datasetCount}">TXT'den Yükle:</label>
+                <input type="file" class="file-upload" id="file-upload-${datasetCount}" accept=".txt">
+            </div>
         `;
         datasetContainer.appendChild(datasetDiv);
     }
 
     addDatasetBtn.addEventListener('click', addNewDataset);
+
+    datasetContainer.addEventListener('change', (e) => {
+        if (e.target.classList.contains('file-upload')) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const content = event.target.result;
+                    const pointsContainer = e.target.closest('.dataset').querySelector('.data-points');
+                    pointsContainer.innerHTML = ''; // Clear existing points
+                    const lines = content.split('\n').filter(line => line.trim() !== '');
+                    lines.forEach((line, index) => {
+                        const [x, y] = line.split(/[,;\\s]+/).map(Number);
+                        if (!isNaN(x) && !isNaN(y)) {
+                            const pointDiv = document.createElement('div');
+                            pointDiv.classList.add('point');
+                            pointDiv.innerHTML = `
+                                <input type="number" class="x-input" placeholder="X Değeri" value="${x}">
+                                <input type="number" class="y-input" placeholder="Y Değeri" value="${y}">
+                                <button class="remove-point">X</button>
+                            `;
+                            pointsContainer.appendChild(pointDiv);
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            }
+        }
+    });
 
     datasetContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('add-point')) {
@@ -56,6 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.target.parentElement.remove();
             }
         }
+        if (e.target.classList.contains('remove-dataset')) {
+            if (datasetContainer.children.length > 1) {
+                e.target.closest('.dataset').remove();
+            }
+        }
     });
 
     drawChartBtn.addEventListener('click', () => {
@@ -63,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const chartDatasets = [];
         chartData = [];
         datasetSelector.innerHTML = ''; // Clear previous options
+        const selector1 = document.getElementById('dataset-selector-1');
+        const selector2 = document.getElementById('dataset-selector-2');
+        selector1.innerHTML = '';
+        selector2.innerHTML = '';
+
 
         datasets.forEach((dataset, index) => {
             const xInputs = dataset.querySelectorAll('.x-input');
@@ -83,6 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
             option.value = index;
             option.textContent = `Veri Seti ${index + 1}`;
             datasetSelector.appendChild(option);
+
+            // Also populate the selectors for area calculation
+            const option1 = document.createElement('option');
+            option1.value = index;
+            option1.textContent = `Veri Seti ${index + 1}`;
+            selector1.appendChild(option1);
+
+            const option2 = document.createElement('option');
+            option2.value = index;
+            option2.textContent = `Veri Seti ${index + 1}`;
+            selector2.appendChild(option2);
 
             chartDatasets.push({
                 label: `Veri Seti ${index + 1}`,
@@ -200,6 +257,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const r = getCorrelation(data);
         resultsDiv.innerHTML = `Belirlilik Katsayısı (R-kare): ${(r*r).toFixed(3)}`;
+    });
+
+    document.getElementById('calculate-area-between').addEventListener('click', () => {
+        const selector1 = document.getElementById('dataset-selector-1');
+        const selector2 = document.getElementById('dataset-selector-2');
+        const index1 = parseInt(selector1.value, 10);
+        const index2 = parseInt(selector2.value, 10);
+
+        if (isNaN(index1) || isNaN(index2)) {
+            resultsDiv.innerHTML = 'Lütfen alan hesaplaması için iki veri seti seçin.';
+            return;
+        }
+        if (index1 === index2) {
+            resultsDiv.innerHTML = 'Lütfen iki farklı veri seti seçin.';
+            return;
+        }
+
+        const data1 = chartData[index1];
+        const data2 = chartData[index2];
+
+        if (!data1 || data1.length < 2 || !data2 || data2.length < 2) {
+            resultsDiv.innerHTML = 'Seçilen veri setlerinden en az birinde yeterli nokta (en az 2) yok.';
+            return;
+        }
+
+        // Helper function for linear interpolation
+        const interpolate = (data, x) => {
+            for (let i = 0; i < data.length - 1; i++) {
+                if (data[i].x <= x && data[i+1].x >= x) {
+                    const x1 = data[i].x, y1 = data[i].y;
+                    const x2 = data[i+1].x, y2 = data[i+1].y;
+                    if (x2 - x1 === 0) return y1; // Avoid division by zero
+                    return y1 + (y2 - y1) * (x - x1) / (x2 - x1);
+                }
+            }
+            return null; // x is out of range
+        };
+
+        const allX = [...new Set([...data1.map(p => p.x), ...data2.map(p => p.x)])].sort((a, b) => a - b);
+        let totalArea = 0;
+
+        for (let i = 0; i < allX.length - 1; i++) {
+            const x_start = allX[i];
+            const x_end = allX[i+1];
+            const mid_x = (x_start + x_end) / 2;
+
+            const y1_start = interpolate(data1, x_start);
+            const y2_start = interpolate(data2, x_start);
+            const y1_end = interpolate(data1, x_end);
+            const y2_end = interpolate(data2, x_end);
+
+            // Check if the interval is valid for both datasets
+            if (y1_start !== null && y2_start !== null && y1_end !== null && y2_end !== null) {
+                const height_diff_start = Math.abs(y1_start - y2_start);
+                const height_diff_end = Math.abs(y1_end - y2_end);
+                const segment_area = ((height_diff_start + height_diff_end) / 2) * (x_end - x_start);
+                totalArea += segment_area;
+            }
+        }
+
+        resultsDiv.innerHTML = `İki Eğri Arasında Kalan Yaklaşık Alan: ${totalArea.toFixed(2)}`;
     });
 
     // --- 3D Plotting Logic ---
