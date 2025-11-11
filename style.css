@@ -12,6 +12,14 @@ h1 {
     color: #333;
 }
 
+.section-header {
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 20px;
+    border-top: 2px solid #ddd;
+    padding-top: 20px;
+}
+
 .container {
     display: flex;
     flex-wrap: wrap;
@@ -21,24 +29,37 @@ h1 {
     max-width: 1200px;
 }
 
-.input-section, .chart-section, .control-panel {
+.input-section, .chart-section, .control-panel,
+.input-section-3d, .chart-section-3d, .control-panel-3d {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.input-section {
+.input-section, .control-panel,
+.input-section-3d, .control-panel-3d {
     width: 300px;
 }
 
-.chart-section {
+.chart-section, .chart-section-3d {
     flex-grow: 1;
     min-width: 400px;
 }
 
-.control-panel {
-    width: 300px;
+.chart-section-3d {
+    min-height: 500px;
+}
+
+.dataset {
+    border: 1px solid #eee;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.dataset h3 {
+    margin-top: 0;
 }
 
 .point {
@@ -47,12 +68,18 @@ h1 {
     margin-bottom: 10px;
 }
 
-input[type="number"] {
+input[type="number"], input[type="text"] {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    box-sizing: border-box;
 }
+
+#eq-input {
+    margin-bottom: 10px;
+}
+
 
 button {
     background-color: #007bff;
@@ -84,62 +111,16 @@ button:hover {
     background-color: #cc0000;
 }
 
-.analysis-grid {
+.analysis-grid, .analysis-grid-3d {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 15px;
 }
 
-.analysis-grid button {
+.analysis-grid button, .analysis-grid-3d button {
     width: 100%;
     margin-top: 0; /* Remove top margin for grid items */
-}
-
-#results {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #e9e9e9;
-    border-radius: 4px;
-}
-
-/* 3D Plotting Styles */
-.container-3d {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-    margin-top: 40px;
-    border-top: 2px solid #ddd;
-    padding-top: 20px;
-}
-
-.input-section-3d, .control-panel-3d {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 300px;
-}
-
-.chart-section-3d {
-    flex-grow: 1;
-    min-width: 400px;
-    min-height: 500px;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#eq-input {
-    width: calc(100% - 16px); /* Adjust for padding */
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 10px;
 }
 
 .range-inputs {
@@ -149,22 +130,26 @@ button:hover {
     margin-bottom: 10px;
 }
 
-.analysis-grid-3d {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.analysis-grid-3d button {
-    width: 100%;
-    margin-top: 0;
-}
-
-#results-3d {
+#results, #results-3d {
     margin-top: 20px;
     padding: 10px;
     background-color: #e9e9e9;
     border-radius: 4px;
     min-height: 50px;
+}
+
+.dataset-selector-container {
+    margin-bottom: 15px;
+}
+
+.dataset-selector-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#dataset-selector {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }

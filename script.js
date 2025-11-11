@@ -1,12 +1,114 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const addPointBtn = document.getElementById('add-point');
-    const drawChartBtn = document.getElementById('draw-chart');
-    const dataPointsContainer = document.getElementById('data-points');
-    const resultsDiv = document.getElementById('results');
+    // --- Common DOM Elements ---
     const ctx = document.getElementById('myChart').getContext('2d');
+    let myChart;
 
-    // Analysis Buttons
+    // --- 2D Plotting ---
+    const datasetContainer = document.getElementById('dataset-container');
+    const addDatasetBtn = document.getElementById('add-dataset');
+    const drawChartBtn = document.getElementById('draw-chart');
+    const resultsDiv = document.getElementById('results');
+    const datasetSelector = document.getElementById('dataset-selector');
+    let datasetCount = 1;
+    let chartData = []; // To hold data for analysis
+
+    const COLORS = [
+        'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
+    ];
+
+    function addNewDataset() {
+        datasetCount++;
+        const datasetDiv = document.createElement('div');
+        datasetDiv.classList.add('dataset');
+        datasetDiv.innerHTML = `
+            <h3>Veri Seti ${datasetCount}</h3>
+            <div class="data-points">
+                <div class="point">
+                    <input type="number" class="x-input" placeholder="X Değeri">
+                    <input type="number" class="y-input" placeholder="Y Değeri">
+                    <button class="remove-point">X</button>
+                </div>
+            </div>
+            <button class="add-point">Nokta Ekle</button>
+        `;
+        datasetContainer.appendChild(datasetDiv);
+    }
+
+    addDatasetBtn.addEventListener('click', addNewDataset);
+
+    datasetContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('add-point')) {
+            const pointsContainer = e.target.previousElementSibling;
+            const pointDiv = document.createElement('div');
+            pointDiv.classList.add('point');
+            pointDiv.innerHTML = `
+                <input type="number" class="x-input" placeholder="X Değeri">
+                <input type="number" class="y-input" placeholder="Y Değeri">
+                <button class="remove-point">X</button>
+            `;
+            pointsContainer.appendChild(pointDiv);
+        }
+        if (e.target.classList.contains('remove-point')) {
+            const pointsContainer = e.target.closest('.data-points');
+            if (pointsContainer.children.length > 1) {
+                e.target.parentElement.remove();
+            }
+        }
+    });
+
+    drawChartBtn.addEventListener('click', () => {
+        const datasets = document.querySelectorAll('.dataset');
+        const chartDatasets = [];
+        chartData = [];
+        datasetSelector.innerHTML = ''; // Clear previous options
+
+        datasets.forEach((dataset, index) => {
+            const xInputs = dataset.querySelectorAll('.x-input');
+            const yInputs = dataset.querySelectorAll('.y-input');
+            const data = [];
+
+            for (let i = 0; i < xInputs.length; i++) {
+                const x = parseFloat(xInputs[i].value);
+                const y = parseFloat(yInputs[i].value);
+                if (!isNaN(x) && !isNaN(y)) {
+                    data.push({ x, y });
+                }
+            }
+            data.sort((a, b) => a.x - b.x);
+            chartData.push(data);
+
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `Veri Seti ${index + 1}`;
+            datasetSelector.appendChild(option);
+
+            chartDatasets.push({
+                label: `Veri Seti ${index + 1}`,
+                data: data,
+                borderColor: COLORS[index % COLORS.length],
+                fill: false,
+                tension: 0.1
+            });
+        });
+
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets: chartDatasets },
+            options: { scales: { x: { type: 'linear', position: 'bottom' } } }
+        });
+    });
+
+    // --- 2D Analysis Logic ---
+    function getSelectedDataset() {
+        const selectedIndex = parseInt(datasetSelector.value, 10);
+        return chartData[selectedIndex];
+    }
+
+    // ... (rest of the file is the same, including all 3D logic and analysis)
     const findEquationBtn = document.getElementById('find-equation');
     const calculateAreaBtn = document.getElementById('calculate-area');
     const calcMeanXBtn = document.getElementById('calc-mean-x');
@@ -18,71 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const calcCorrelationBtn = document.getElementById('calc-correlation');
     const calcRSquaredBtn = document.getElementById('calc-r-squared');
 
-    let myChart;
-    let currentData = [];
-
-    // --- Data Input and Management ---
-
-    function addPoint() {
-        const pointDiv = document.createElement('div');
-        pointDiv.classList.add('point');
-        pointDiv.innerHTML = `
-            <input type="number" class="x-input" placeholder="X Değeri">
-            <input type="number" class="y-input" placeholder="Y Değeri">
-            <button class="remove-point">X</button>
-        `;
-        dataPointsContainer.appendChild(pointDiv);
-    }
-
-    addPointBtn.addEventListener('click', addPoint);
-
-    dataPointsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-point')) {
-            if (dataPointsContainer.children.length > 1) {
-                e.target.parentElement.remove();
-            }
-        }
-    });
-
-    // --- Chart Drawing ---
-
-    drawChartBtn.addEventListener('click', () => {
-        const xInputs = document.querySelectorAll('.x-input');
-        const yInputs = document.querySelectorAll('.y-input');
-        const data = [];
-
-        for (let i = 0; i < xInputs.length; i++) {
-            const x = parseFloat(xInputs[i].value);
-            const y = parseFloat(yInputs[i].value);
-            if (!isNaN(x) && !isNaN(y)) {
-                data.push({ x, y });
-            }
-        }
-
-        data.sort((a, b) => a.x - b.x);
-        currentData = data;
-
-        if (myChart) myChart.destroy();
-
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                datasets: [{
-                    label: 'Veri Grafiği',
-                    data: currentData,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: false,
-                    tension: 0.1
-                }]
-            },
-            options: { scales: { x: { type: 'linear', position: 'bottom' } } }
-        });
-    });
-
-    // --- Statistical Helper Functions ---
-
-    const getValues = (axis) => currentData.map(p => p[axis]);
+    const getValues = (data, axis) => data.map(p => p[axis]);
     const getMean = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
     const getMedian = (arr) => {
         const sorted = [...arr].sort((a, b) => a - b);
@@ -95,54 +133,55 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.sqrt(variance);
     };
 
-    // --- Analysis Event Listeners ---
-
-    function runAnalysis(calculation, resultText) {
-        if (currentData.length < 1) {
-            resultsDiv.innerHTML = 'Analiz için en az 1 noktaya ihtiyaç var.';
+    function run2DAnalysis(calculation, resultText) {
+        const data = getSelectedDataset();
+        if (!data || data.length < 1) {
+            resultsDiv.innerHTML = 'Analiz için geçerli bir veri seti seçin.';
             return;
         }
-        const result = calculation();
+        const result = calculation(data);
         resultsDiv.innerHTML = `${resultText}: ${result.toFixed(3)}`;
     }
 
-    calcMeanXBtn.addEventListener('click', () => runAnalysis(() => getMean(getValues('x')), 'X Değerlerinin Ortalaması'));
-    calcMeanYBtn.addEventListener('click', () => runAnalysis(() => getMean(getValues('y')), 'Y Değerlerinin Ortalaması'));
-    calcMedianXBtn.addEventListener('click', () => runAnalysis(() => getMedian(getValues('x')), 'X Değerlerinin Medyanı'));
-    calcMedianYBtn.addEventListener('click', () => runAnalysis(() => getMedian(getValues('y')), 'Y Değerlerinin Medyanı'));
-    calcStdDevXBtn.addEventListener('click', () => runAnalysis(() => getStdDev(getValues('x')), 'X Değerlerinin Std. Sapması'));
-    calcStdDevYBtn.addEventListener('click', () => runAnalysis(() => getStdDev(getValues('y')), 'Y Değerlerinin Std. Sapması'));
+    calcMeanXBtn.addEventListener('click', () => run2DAnalysis((data) => getMean(getValues(data, 'x')), 'X Ortalaması'));
+    calcMeanYBtn.addEventListener('click', () => run2DAnalysis((data) => getMean(getValues(data, 'y')), 'Y Ortalaması'));
+    calcMedianXBtn.addEventListener('click', () => run2DAnalysis((data) => getMedian(getValues(data, 'x')), 'X Medyanı'));
+    calcMedianYBtn.addEventListener('click', () => run2DAnalysis((data) => getMedian(getValues(data, 'y')), 'Y Medyanı'));
+    calcStdDevXBtn.addEventListener('click', () => run2DAnalysis((data) => getStdDev(getValues(data, 'x')), 'X Std. Sapma'));
+    calcStdDevYBtn.addEventListener('click', () => run2DAnalysis((data) => getStdDev(getValues(data, 'y')), 'Y Std. Sapma'));
 
     findEquationBtn.addEventListener('click', () => {
-        if (currentData.length < 2) {
-            resultsDiv.innerHTML = 'Denklem bulmak için en az 2 noktaya ihtiyaç var.';
+        const data = getSelectedDataset();
+        if (!data || data.length < 2) {
+            resultsDiv.innerHTML = 'Denklem bulmak için en az 2 noktalı bir veri seti seçin.';
             return;
         }
         let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        const n = currentData.length;
-        currentData.forEach(p => { sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumX2 += p.x * p.x; });
+        const n = data.length;
+        data.forEach(p => { sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumX2 += p.x * p.x; });
         const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
         const intercept = (sumY - slope * sumX) / n;
         resultsDiv.innerHTML = `Bulunan Doğru Denklemi: <br> y = ${slope.toFixed(2)}x + ${intercept.toFixed(2)}`;
     });
 
     calculateAreaBtn.addEventListener('click', () => {
-        if (currentData.length < 2) {
-            resultsDiv.innerHTML = 'Alan hesaplamak için en az 2 noktaya ihtiyaç var.';
+        const data = getSelectedDataset();
+         if (!data || data.length < 2) {
+            resultsDiv.innerHTML = 'Alan hesaplamak için en az 2 noktalı bir veri seti seçin.';
             return;
         }
         let area = 0;
-        for (let i = 0; i < currentData.length - 1; i++) {
-            const p1 = currentData[i], p2 = currentData[i + 1];
+        for (let i = 0; i < data.length - 1; i++) {
+            const p1 = data[i], p2 = data[i + 1];
             area += (p2.x - p1.x) * (p1.y + p2.y) / 2;
         }
         resultsDiv.innerHTML = `Eğrinin Altında Kalan Yaklaşık Alan: ${area.toFixed(2)}`;
     });
 
-    function getCorrelation() {
+    function getCorrelation(data) {
         let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-        const n = currentData.length;
-        currentData.forEach(p => {
+        const n = data.length;
+        data.forEach(p => {
             sumX += p.x; sumY += p.y; sumXY += p.x * p.y;
             sumX2 += p.x * p.x; sumY2 += p.y * p.y;
         });
@@ -151,21 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return numerator / denominator;
     }
 
-    calcCorrelationBtn.addEventListener('click', () => {
-        if (currentData.length < 2) {
-            resultsDiv.innerHTML = 'Korelasyon için en az 2 noktaya ihtiyaç var.';
-            return;
-        }
-        runAnalysis(getCorrelation, 'Korelasyon Katsayısı (r)');
-    });
+    calcCorrelationBtn.addEventListener('click', () => run2DAnalysis(getCorrelation, 'Korelasyon Katsayısı (r)'));
 
     calcRSquaredBtn.addEventListener('click', () => {
-        if (currentData.length < 2) {
-            resultsDiv.innerHTML = 'R-Kare için en az 2 noktaya ihtiyaç var.';
+        const data = getSelectedDataset();
+        if (!data || data.length < 2) {
+            resultsDiv.innerHTML = 'R-Kare için en az 2 noktalı bir veri seti seçin.';
             return;
         }
-        const r = getCorrelation();
-        runAnalysis(() => r * r, 'Belirlilik Katsayısı (R-kare)');
+        const r = getCorrelation(data);
+        resultsDiv.innerHTML = `Belirlilik Katsayısı (R-kare): ${(r*r).toFixed(3)}`;
     });
 
     // --- 3D Plotting Logic ---
@@ -176,8 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const yMinInput = document.getElementById('y-min');
     const yMaxInput = document.getElementById('y-max');
     const results3dDiv = document.getElementById('results-3d');
-
-    let zData = []; // Store z data for analysis
+    let zData = [];
 
     draw3dChartBtn.addEventListener('click', () => {
         try {
@@ -186,64 +219,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 results3dDiv.innerHTML = 'Lütfen bir denklem girin.';
                 return;
             }
-
-            const xMin = parseFloat(xMinInput.value);
-            const xMax = parseFloat(xMaxInput.value);
-            const yMin = parseFloat(yMinInput.value);
-            const yMax = parseFloat(yMaxInput.value);
-
             const node = math.parse(expr);
             const code = node.compile();
+            const xMin = parseFloat(xMinInput.value), xMax = parseFloat(xMaxInput.value);
+            const yMin = parseFloat(yMinInput.value), yMax = parseFloat(yMaxInput.value);
+            const steps = 50;
+            const xStep = (xMax - xMin) / steps, yStep = (yMax - yMin) / steps;
+            const xValues = Array.from({length: steps + 1}, (_, i) => xMin + i * xStep);
+            const yValues = Array.from({length: steps + 1}, (_, i) => yMin + i * yStep);
+            zData = yValues.map(y => xValues.map(x => code.evaluate({x, y})));
 
-            const xValues = [];
-            const yValues = [];
-            zData = [];
-
-            const steps = 50; // Resolution of the plot
-            const xStep = (xMax - xMin) / steps;
-            const yStep = (yMax - yMin) / steps;
-
-            for (let i = 0; i <= steps; i++) {
-                xValues.push(xMin + i * xStep);
-                yValues.push(yMin + i * yStep);
-            }
-
-            for (let j = 0; j <= steps; j++) {
-                const zRow = [];
-                for (let i = 0; i <= steps; i++) {
-                    const scope = {
-                        x: xValues[i],
-                        y: yValues[j]
-                    };
-                    zRow.push(code.evaluate(scope));
-                }
-                zData.push(zRow);
-            }
-
-            const data = [{
-                z: zData,
-                x: xValues,
-                y: yValues,
-                type: 'surface'
-            }];
-
+            const data = [{ z: zData, x: xValues, y: yValues, type: 'surface' }];
             const layout = {
                 title: `z = ${expr}`,
                 autosize: true,
                 margin: { l: 65, r: 50, b: 65, t: 90 }
             };
-
             Plotly.newPlot('my3dChart', data, layout);
             results3dDiv.innerHTML = 'Grafik başarıyla çizildi.';
-
         } catch (error) {
             results3dDiv.innerHTML = `Hata: ${error.message}`;
         }
     });
 
     // --- 3D Analysis Logic ---
-    const analysis3dButtons = document.querySelectorAll('.analysis-grid-3d button');
-
     function run3dAnalysis(calculation, resultText) {
         if (zData.length === 0) {
             results3dDiv.innerHTML = 'Lütfen önce bir 3D grafik çizin.';
@@ -257,29 +256,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.getElementById('calc-max-z').addEventListener('click', () => {
-        run3dAnalysis(() => Math.max(...zData.flat()).toFixed(3), 'Maksimum Değer (Tepe)');
-    });
-
-    document.getElementById('calc-min-z').addEventListener('click', () => {
-        run3dAnalysis(() => Math.min(...zData.flat()).toFixed(3), 'Minimum Değer (Çukur)');
-    });
-
+    document.getElementById('calc-max-z').addEventListener('click', () => run3dAnalysis(() => Math.max(...zData.flat()).toFixed(3), 'Maksimum Değer (Tepe)'));
+    document.getElementById('calc-min-z').addEventListener('click', () => run3dAnalysis(() => Math.min(...zData.flat()).toFixed(3), 'Minimum Değer (Çukur)'));
     document.getElementById('calc-mean-z').addEventListener('click', () => {
         run3dAnalysis(() => {
             const flatZ = zData.flat();
             return (flatZ.reduce((a, b) => a + b, 0) / flatZ.length).toFixed(3);
         }, 'Ortalama Yükseklik');
     });
-
-    document.getElementById('calc-height-diff').addEventListener('click', () => {
+     document.getElementById('calc-height-diff').addEventListener('click', () => {
         run3dAnalysis(() => {
             const flatZ = zData.flat();
             return (Math.max(...flatZ) - Math.min(...flatZ)).toFixed(3);
         }, 'Toplam Yükseklik Farkı');
     });
-
-    document.getElementById('calc-peak-coords').addEventListener('click', () => {
+     document.getElementById('calc-peak-coords').addEventListener('click', () => {
         run3dAnalysis(() => {
             const maxZ = Math.max(...zData.flat());
             for (let j = 0; j < zData.length; j++) {
@@ -293,8 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 'Tepe Noktası Koordinatları');
     });
-
-    document.getElementById('calc-trough-coords').addEventListener('click', () => {
+     document.getElementById('calc-trough-coords').addEventListener('click', () => {
         run3dAnalysis(() => {
             const minZ = Math.min(...zData.flat());
             for (let j = 0; j < zData.length; j++) {
@@ -308,8 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 'Çukur Noktası Koordinatları');
     });
-
-    document.getElementById('calc-volume').addEventListener('click', () => {
+     document.getElementById('calc-volume').addEventListener('click', () => {
         run3dAnalysis(() => {
              const xStep = (parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50;
              const yStep = (parseFloat(yMaxInput.value) - parseFloat(yMinInput.value)) / 50;
@@ -318,8 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
              return totalVolume.toFixed(3);
         }, 'Yüzeyin Altındaki Hacim');
     });
-
-    document.getElementById('calc-surface-area').addEventListener('click', () => {
+     document.getElementById('calc-surface-area').addEventListener('click', () => {
         run3dAnalysis(() => {
             let totalArea = 0;
             const xStep = (parseFloat(xMaxInput.value) - parseFloat(xMinInput.value)) / 50;
@@ -334,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
              return totalArea.toFixed(3);
         }, '3D Yüzey Alanı');
     });
-
     document.getElementById('calc-avg-slope').addEventListener('click', () => {
         run3dAnalysis(() => {
             let totalSlope = 0;
@@ -352,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return (totalSlope / count).toFixed(3);
         }, 'Ortalama Eğim');
     });
-
     document.getElementById('check-symmetry').addEventListener('click', () => {
         run3dAnalysis(() => {
             // Check for symmetry across y-z plane (f(x,y) vs f(-x,y))

@@ -11,14 +11,20 @@
     <div class="container">
         <div class="input-section">
             <h2>Veri Girişi</h2>
-            <div id="data-points">
-                <div class="point">
-                    <input type="number" class="x-input" placeholder="X Değeri">
-                    <input type="number" class="y-input" placeholder="Y Değeri">
-                    <button class="remove-point">X</button>
+            <div id="dataset-container">
+                <div class="dataset">
+                    <h3>Veri Seti 1</h3>
+                    <div class="data-points">
+                        <div class="point">
+                            <input type="number" class="x-input" placeholder="X Değeri">
+                            <input type="number" class="y-input" placeholder="Y Değeri">
+                            <button class="remove-point">X</button>
+                        </div>
+                    </div>
+                    <button class="add-point">Nokta Ekle</button>
                 </div>
             </div>
-            <button id="add-point">Nokta Ekle</button>
+            <button id="add-dataset">Veri Seti Ekle</button>
             <button id="draw-chart">Grafiği Çiz</button>
         </div>
         <div class="chart-section">
@@ -26,6 +32,10 @@
         </div>
         <div class="control-panel">
             <h2>Kontrol Paneli</h2>
+            <div class="dataset-selector-container">
+                <label for="dataset-selector">Analiz için Veri Seti Seçin:</label>
+                <select id="dataset-selector"></select>
+            </div>
             <button id="find-equation">Eğrinin Denklemini Bul</button>
             <button id="calculate-area">Altında Kalan Alanı Bul</button>
             <div class="analysis-grid">
@@ -43,8 +53,10 @@
     </div>
 
     <!-- 3D Plotting Section -->
-    <div class="container-3d">
+    <div class="section-header">
         <h1>3D Denklem Çizim ve Analiz</h1>
+    </div>
+    <div class="container">
         <div class="input-section-3d">
             <h2>Denklem ve Ayarlar</h2>
             <input type="text" id="eq-input" placeholder="z = f(x, y) örn: sin(x) + cos(y)">
